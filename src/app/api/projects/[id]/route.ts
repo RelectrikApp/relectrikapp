@@ -58,16 +58,15 @@ export async function PATCH(
       );
     }
     const data = { ...parsed.data };
-    if (data.startDate) {
-      data.startDate = new Date(data.startDate as string);
-    }
-    if (data.completedDate) {
-      data.completedDate = new Date(data.completedDate as string);
-    }
+    const updateData = {
+      ...data,
+      ...(data.startDate && { startDate: new Date(data.startDate) }),
+      ...(data.completedDate && { completedDate: new Date(data.completedDate) }),
+    };
     if (data.completedDate) (data as { completedDate: Date }).completedDate = new Date(data.completedDate);
     const project = await prisma.project.update({
       where: { id },
-      data,
+      data: updateData,
       include: {
         assignedTechnician: {
           select: { id: true, name: true, email: true },
