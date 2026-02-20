@@ -1,0 +1,15 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --relectrik-black: #000000;
+  --relectrik-orange: #F59E0B;
+  --relectrik-white: #FFFFFF;
+  --relectrik-success: #F59E0B;
+  --relectrik-accent: #FB923C;
+}
+
+body {
+  @apply bg-relectrik-black text-relectrik-white antialiased;
+}

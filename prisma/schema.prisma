@@ -1,0 +1,260 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                 String              @id @default(cuid())
+  email              String              @unique
+  name               String?
+  passwordHash       String?
+  role               UserRole            @default(TECHNICIAN)
+  status             UserStatus          @default(ACTIVE)
+  department         String?
+  blockedUntil       DateTime?           @db.Timestamptz(6) // technician blocked until 6am after disconnect
+  emailVerifiedAt    DateTime?           @db.Timestamptz(6) // null until user clicks verification link
+  createdAt          DateTime            @default(now()) @db.Timestamptz(6)
+  updatedAt          DateTime            @default(now()) @updatedAt @db.Timestamptz(6)
+  aiInteractions     AIInteraction[]
+  materialPurchases  MaterialPurchase[]
+  materialUsages     MaterialUsage[]
+  performanceMetrics PerformanceMetric[]
+  assignedProjects   Project[]           @relation("AssignedTechnician")
+  workSessions       WorkSession[]
+
+  @@index([email], map: "idx_user_email")
+  @@index([role], map: "idx_user_role")
+  @@index([status], map: "idx_user_status")
+}
+
+model Project {
+  id                   String             @id @default(cuid())
+  clientName           String
+  clientPhone          String?
+  address              String
+  lat                  Float?
+  lng                  Float?
+  description          String?
+  status               ProjectStatus      @default(PENDING)
+  estimatedCost        Float?
+  assignedTechnicianId String?
+  createdAt            DateTime           @default(now())
+  startDate            DateTime?
+  completedDate        DateTime?
+  invoices             Invoice[]
+  materialPurchases    MaterialPurchase[]
+  materialUsages       MaterialUsage[]
+  assignedTechnician   User?              @relation("AssignedTechnician", fields: [assignedTechnicianId], references: [id])
+  projectProfit        ProjectProfit?
+  workSessions         WorkSession[]
+}
+
+model WorkSession {
+  id                String             @id @default(cuid())
+  technicianId      String
+  projectId         String
+  startTime         DateTime
+  endTime           DateTime?
+  isActive          Boolean            @default(true)
+  blockReason       String?
+  efficiencyScore   Float?
+  activityLogs      ActivityLog[]
+  locations         Location[]
+  materialPurchases MaterialPurchase[]
+  materialUsages    MaterialUsage[]
+  project           Project            @relation(fields: [projectId], references: [id])
+  technician        User               @relation(fields: [technicianId], references: [id])
+}
+
+model Location {
+  id           String      @id @default(cuid())
+  sessionId    String
+  lat          Float
+  lng          Float
+  timestamp    DateTime    @default(now())
+  activityType String?
+  accuracy     Float?
+  session      WorkSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+}
+
+model ActivityLog {
+  id        String       @id @default(cuid())
+  sessionId String
+  type      ActivityType
+  startTime DateTime
+  endTime   DateTime
+  duration  Int?
+  session   WorkSession  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+}
+
+model MaterialPurchase {
+  id              String      @id @default(cuid())
+  projectId       String
+  sessionId       String
+  technicianId    String
+  supplierName    String?
+  supplierAddress String?
+  items           Json
+  totalCost       Float
+  purchaseTime    DateTime    @default(now())
+  receiptPhoto    String?
+  project         Project     @relation(fields: [projectId], references: [id])
+  session         WorkSession @relation(fields: [sessionId], references: [id])
+  technician      User        @relation(fields: [technicianId], references: [id])
+}
+
+model MaterialUsage {
+  id            String      @id @default(cuid())
+  projectId     String
+  sessionId     String
+  technicianId  String
+  itemsUsed     Json
+  itemsReturned Json        @default("[]")
+  recordedAt    DateTime    @default(now())
+  project       Project     @relation(fields: [projectId], references: [id])
+  session       WorkSession @relation(fields: [sessionId], references: [id])
+  technician    User        @relation(fields: [technicianId], references: [id])
+}
+
+model Invoice {
+  id            String        @id @default(cuid())
+  projectId     String
+  clientName    String
+  amountCharged Float
+  invoiceDate   DateTime      @default(now())
+  paidDate      DateTime?
+  paymentStatus PaymentStatus @default(PENDING)
+  generatedBy   String?
+  project       Project       @relation(fields: [projectId], references: [id])
+}
+
+model ProjectProfit {
+  id                String   @id @default(cuid())
+  projectId         String   @unique
+  totalRevenue      Float
+  totalMaterialCost Float
+  totalLaborCost    Float
+  totalTravelCost   Float
+  netProfit         Float
+  profitMargin      Float
+  calculatedAt      DateTime @default(now())
+  project           Project  @relation(fields: [projectId], references: [id])
+}
+
+model PerformanceMetric {
+  id     String     @id @default(cuid())
+  userId String
+  date   DateTime
+  metric MetricType
+  value  Float
+  user   User       @relation(fields: [userId], references: [id])
+}
+
+model AIInteraction {
+  id                String   @id @default(cuid())
+  userId            String
+  query             String
+  response          String?
+  executedFunctions Json?
+  timestamp         DateTime @default(now())
+  actionTaken       Boolean?
+  aiConfidence      Float?
+  user              User     @relation(fields: [userId], references: [id])
+}
+
+model AIRecommendation {
+  id                 String                  @id @default(cuid())
+  type               String
+  priority           String
+  message            String
+  reasoning          String?
+  dataSource         String?
+  alternativeOptions Json?
+  suggestedAction    String?
+  userDecision       RecommendationDecision?
+  confidenceScore    Float?
+  createdAt          DateTime                @default(now())
+  decisionLogs       AIDecisionLog[]
+}
+
+model AIDecisionLog {
+  id               String           @id @default(cuid())
+  recommendationId String
+  expectedOutcome  String?
+  actualOutcome    String?
+  wasSuccessful    Boolean?
+  lessonsLearned   String?
+  timestamp        DateTime         @default(now())
+  recommendation   AIRecommendation @relation(fields: [recommendationId], references: [id], onDelete: Cascade)
+}
+
+model DataQualityAlert {
+  id              String    @id @default(cuid())
+  type            String
+  severity        String
+  description     String
+  affectedRecords Json?
+  detectedAt      DateTime  @default(now())
+  resolvedAt      DateTime?
+}
+
+model AuthToken {
+  id        String   @id @default(cuid())
+  email     String
+  token     String   @unique
+  type      String   // "email_verification" | "password_reset"
+  expiresAt DateTime @db.Timestamptz(6)
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+
+  @@index([token, type])
+  @@index([email, type])
+}
+
+enum UserRole {
+  ADMIN
+  TECHNICIAN
+  CEO
+}
+
+enum UserStatus {
+  ACTIVE
+  BLOCKED
+}
+
+enum ProjectStatus {
+  PENDING
+  ASSIGNED
+  IN_PROGRESS
+  COMPLETED
+  INVOICED
+  PAID
+}
+
+enum ActivityType {
+  TRAVEL
+  AT_JOB_SITE
+  PURCHASING
+  IDLE
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  OVERDUE
+}
+
+enum MetricType {
+  AVG_JOB_TIME
+  MATERIAL_EFFICIENCY
+  PROFIT_PER_JOB
+}
+
+enum RecommendationDecision {
+  ACCEPTED
+  REJECTED
+  MODIFIED
+}
