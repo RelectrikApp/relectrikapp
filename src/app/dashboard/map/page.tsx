@@ -3,11 +3,24 @@
 import { useState, useEffect, useRef } from "react";
 
 // Google Maps se carga por script; tipos mínimos para el mapa
+interface GoogleMap {
+  fitBounds: (b: unknown, padding?: number) => void;
+  setZoom: (zoom: number) => void;
+}
+
+interface GoogleMarker {
+  setMap: (m: GoogleMap | null) => void;
+}
+
+interface GoogleLatLngBounds {
+  extend: (p: { lat: number; lng: number }) => void;
+}
+
 declare const google: {
   maps: {
-    Map: new (el: HTMLElement, o: object) => { fitBounds: (b: unknown) => void };
-    Marker: new (o: object) => { setMap: (m: unknown) => void };
-    LatLngBounds: new () => { extend: (p: { lat: number; lng: number }) => void };
+    Map: new (el: HTMLElement, o: object) => GoogleMap;
+    Marker: new (o: object) => GoogleMarker;
+    LatLngBounds: new () => GoogleLatLngBounds;
   };
 };
 
@@ -33,8 +46,8 @@ export default function LiveMapPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const mapRef = useRef<HTMLDivElement>(null);
-  const mapInstanceRef = useRef<google.maps.Map | null>(null);
-  const markersRef = useRef<google.maps.Marker[]>([]);
+  const mapInstanceRef = useRef<GoogleMap | null>(null);
+  const markersRef = useRef<GoogleMarker[]>([]);
 
   useEffect(() => {
     fetchLocations();

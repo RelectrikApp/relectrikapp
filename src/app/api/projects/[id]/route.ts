@@ -2,7 +2,9 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/prisma";
 import { isAdminOrCEO } from "@/lib/utils/role";
+import { ProjectStatus } from "@prisma/client";
 import { z } from "zod";
+
 
 const UpdateProjectSchema = z.object({
   clientName: z.string().min(1).optional(),
@@ -59,10 +61,17 @@ export async function PATCH(
     }
     const data = { ...parsed.data };
     const updateData = {
-      ...(data.name && { name: data.name }),
-      ...(data.department && { department: data.department }),
-      ...(data.passwordHash && { passwordHash: data.passwordHash }),
-      ...(data.status && { status: data.status as UserStatus }),
+      ...(data.clientName && { clientName: data.clientName }),
+      ...(data.clientPhone && { clientPhone: data.clientPhone }),
+      ...(data.address && { address: data.address }),
+      ...(data.description && { description: data.description }),
+      ...(data.status && { status: data.status as ProjectStatus }),
+      ...(data.estimatedCost !== undefined && { estimatedCost: data.estimatedCost }),
+      ...(data.lat !== undefined && { lat: data.lat }),
+      ...(data.lng !== undefined && { lng: data.lng }),
+      ...(data.assignedTechnicianId !== undefined && { assignedTechnicianId: data.assignedTechnicianId }),
+      ...(data.startDate && { startDate: new Date(data.startDate) }),
+      ...(data.completedDate && { completedDate: new Date(data.completedDate) }),
     };
     const project = await prisma.project.update({
       where: { id },

@@ -32,10 +32,13 @@ export const authOptions: NextAuthOptions = {
             return null; // cliente debe mostrar "Bloqueado hasta mañana 6:00"
           }
           if (user.blockedUntil && now >= user.blockedUntil) {
-            await prisma.user.update({
-              where: { id: user.id },
-              data: { blockedUntil: null },
-            });
+            // Use raw SQL to avoid Prisma client issue with column 'new'
+            await prisma.$executeRaw`
+              UPDATE "User"
+              SET "blockedUntil" = NULL,
+                  "updatedAt" = ${now}::timestamptz(6)
+              WHERE "id" = ${user.id}
+            `;
           }
           // ¿Tiene sesión activa sin ubicación reciente? → bloquear hasta 6am
           const activeSession = await prisma.workSession.findFirst({
@@ -51,16 +54,19 @@ export const authOptions: NextAuthOptions = {
             const lastLocationAt = activeSession.locations[0]?.timestamp;
             const lastActivity = lastLocationAt ?? activeSession.startTime;
             if (now.getTime() - new Date(lastActivity).getTime() > STALE_SESSION_MS) {
-              await prisma.$transaction([
-                prisma.workSession.update({
-                  where: { id: activeSession.id },
-                  data: { isActive: false, endTime: now },
-                }),
-                prisma.user.update({
-                  where: { id: user.id },
-                  data: { blockedUntil: getNext6AM() },
-                }),
-              ]);
+              const next6AM = getNext6AM();
+              // Update work session first
+              await prisma.workSession.update({
+                where: { id: activeSession.id },
+                data: { isActive: false, endTime: now },
+              });
+              // Then update user using raw SQL to avoid Prisma client issue with column 'new'
+              await prisma.$executeRaw`
+                UPDATE "User"
+                SET "blockedUntil" = ${next6AM}::timestamptz(3),
+                    "updatedAt" = ${now}::timestamptz(6)
+                WHERE "id" = ${user.id}
+              `;
               return null; // sesión cerrada y usuario bloqueado hasta 6am
             }
           }

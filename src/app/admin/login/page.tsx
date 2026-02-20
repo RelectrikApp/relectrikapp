@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import Link from "next/link";
 import { signIn, getSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { RightElectrikLogo } from "@/components/ui/RightElectrikLogo";
 import { isAdminOrCEO } from "@/lib/utils/role";
 
-export default function AdminLoginPage() {
+function AdminLoginContent() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(false);
@@ -120,5 +120,24 @@ export default function AdminLoginPage() {
         </div>
       </div>
     </main>
+  );
+}
+
+export default function AdminLoginPage() {
+  return (
+    <Suspense fallback={
+      <main className="min-h-screen bg-[#1e3a5f] flex flex-col items-center justify-center p-4">
+        <div className="w-full max-w-md">
+          <div className="bg-[#1a1a1a] rounded-2xl p-8 shadow-xl">
+            <div className="flex justify-center mb-6">
+              <RightElectrikLogo width={160} height={67} />
+            </div>
+            <div className="text-white text-center">Loading...</div>
+          </div>
+        </div>
+      </main>
+    }>
+      <AdminLoginContent />
+    </Suspense>
   );
 }

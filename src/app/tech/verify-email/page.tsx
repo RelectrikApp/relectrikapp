@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { Suspense, useState, useEffect } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { RightElectrikLogo } from "@/components/ui/RightElectrikLogo";
 
-export default function VerifyEmailPage() {
+function VerifyEmailContent() {
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
@@ -70,5 +70,24 @@ export default function VerifyEmailPage() {
         </div>
       </div>
     </main>
+  );
+}
+
+export default function VerifyEmailPage() {
+  return (
+    <Suspense fallback={
+      <main className="min-h-screen bg-[#1e3a5f] flex flex-col items-center justify-center p-4">
+        <div className="w-full max-w-md">
+          <div className="bg-[#1a1a1a] rounded-2xl p-8 shadow-xl text-center">
+            <div className="flex justify-center mb-6">
+              <RightElectrikLogo width={160} height={67} />
+            </div>
+            <div className="text-white">Loading...</div>
+          </div>
+        </div>
+      </main>
+    }>
+      <VerifyEmailContent />
+    </Suspense>
   );
 }

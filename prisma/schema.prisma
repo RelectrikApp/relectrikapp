@@ -15,8 +15,8 @@ model User {
   role               UserRole            @default(TECHNICIAN)
   status             UserStatus          @default(ACTIVE)
   department         String?
-  blockedUntil       DateTime?           @db.Timestamptz(6) // technician blocked until 6am after disconnect
-  emailVerifiedAt    DateTime?           @db.Timestamptz(6) // null until user clicks verification link
+  blockedUntil       DateTime?           @db.Timestamptz(3) // technician blocked until 6am after disconnect
+  emailVerifiedAt    DateTime?           @db.Timestamptz(3) // null until user clicks verification link
   createdAt          DateTime            @default(now()) @db.Timestamptz(6)
   updatedAt          DateTime            @default(now()) @updatedAt @db.Timestamptz(6)
   aiInteractions     AIInteraction[]

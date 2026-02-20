@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { Suspense, useState, useEffect } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { RightElectrikLogo } from "@/components/ui/RightElectrikLogo";
 
-export default function ResetPasswordPage() {
+function ResetPasswordContent() {
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
   const [password, setPassword] = useState("");
@@ -135,5 +135,24 @@ export default function ResetPasswordPage() {
         </div>
       </div>
     </main>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={
+      <main className="min-h-screen bg-[#1e3a5f] flex flex-col items-center justify-center p-4">
+        <div className="w-full max-w-md">
+          <div className="bg-[#1a1a1a] rounded-2xl p-8 shadow-xl">
+            <div className="flex justify-center mb-6">
+              <RightElectrikLogo width={160} height={67} />
+            </div>
+            <div className="text-white text-center">Loading...</div>
+          </div>
+        </div>
+      </main>
+    }>
+      <ResetPasswordContent />
+    </Suspense>
   );
 }

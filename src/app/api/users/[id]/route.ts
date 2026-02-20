@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/prisma";
 import { requireRole, getUserRole, type Role } from "@/lib/middleware/requireRole";
+import { UserStatus } from "@prisma/client";
 import { hash } from "bcryptjs";
 import { z } from "zod";
 
@@ -62,7 +63,9 @@ export async function PATCH(
     // Backend enforcement: Prevent role escalation
     // ADMIN cannot change roles via frontend - role changes must be done manually in DB
     // If role is provided, ignore it (security: frontend cannot escalate roles)
-    const updateData: { name?: string; status?: string; department?: string; passwordHash?: string } = { ...rest };
+    const updateData: { name?: string; status?: UserStatus; department?: string; passwordHash?: string } = {
+      ...rest,
+    };
     
     // Only allow role updates if explicitly needed (commented out for security)
     // if (role && updaterRole === "ADMIN") {
