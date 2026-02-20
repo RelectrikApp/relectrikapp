@@ -59,9 +59,10 @@ export async function PATCH(
     }
     const data = { ...parsed.data };
     const updateData = {
-      ...data,
-      ...(data.startDate && { startDate: new Date(data.startDate) }),
-      ...(data.completedDate && { completedDate: new Date(data.completedDate) }),
+      ...(data.name && { name: data.name }),
+      ...(data.department && { department: data.department }),
+      ...(data.passwordHash && { passwordHash: data.passwordHash }),
+      ...(data.status && { status: data.status as UserStatus }),
     };
     const project = await prisma.project.update({
       where: { id },
