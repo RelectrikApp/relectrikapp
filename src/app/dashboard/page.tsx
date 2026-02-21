@@ -20,10 +20,26 @@ interface DashboardMetrics {
   }>;
 }
 
+interface TodaySession {
+  id: string;
+  punchIn: string;
+  punchOut: string | null;
+  duration: string | null;
+  project: string | null;
+  isActive: boolean;
+}
+
+interface TechnicianSessionsToday {
+  technician: { id: string; name: string | null; email: string };
+  sessions: TodaySession[];
+}
+
 export default function DashboardHomePage() {
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
+  const [sessionsToday, setSessionsToday] = useState<TechnicianSessionsToday[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [sessionsError, setSessionsError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchMetrics();
@@ -34,13 +50,41 @@ export default function DashboardHomePage() {
 
   async function fetchMetrics() {
     try {
-      const res = await fetch("/api/dashboard/metrics");
-      if (!res.ok) {
+      setSessionsError(null);
+      setError("");
+      const metricsRes = await fetch("/api/dashboard/metrics");
+      if (!metricsRes.ok) {
         throw new Error("Failed to fetch metrics");
       }
-      const data = await res.json();
+      const data = await metricsRes.json();
       setMetrics(data);
-      setError("");
+
+      try {
+        const sessionsRes = await fetch("/api/dashboard/work-sessions-today", {
+          credentials: "include",
+          cache: "no-store",
+        });
+        if (sessionsRes.ok) {
+          const sessionsData = await sessionsRes.json();
+          if (Array.isArray(sessionsData)) {
+            setSessionsToday(sessionsData);
+          } else {
+            setSessionsToday([]);
+            setSessionsError(sessionsData?.error || "Invalid sessions data");
+          }
+        } else {
+          const errBody = await sessionsRes.json().catch(() => ({}));
+          setSessionsError(
+            errBody?.error || `Error ${sessionsRes.status}: Could not load work sessions`
+          );
+          setSessionsToday([]);
+        }
+      } catch (sessionsErr) {
+        setSessionsToday([]);
+        setSessionsError(
+          sessionsErr instanceof Error ? sessionsErr.message : "Failed to fetch work sessions"
+        );
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load metrics");
     } finally {
@@ -109,6 +153,66 @@ export default function DashboardHomePage() {
                 {metrics.overdueInvoices}
               </p>
             </div>
+          </div>
+
+          {/* Technician connection times - today */}
+          <div className="bg-slate-800 rounded-lg p-6 border border-slate-700">
+            <h3 className="text-lg font-semibold text-white mb-4">
+              Technician connection times
+            </h3>
+            <p className="text-slate-400 text-sm mb-4">
+              Punch in and punch out times. Shows today&apos;s sessions and any technician currently active (punched in).
+            </p>
+            {sessionsError && (
+              <div className="mb-4 p-3 bg-amber-900/30 border border-amber-700 rounded text-amber-200 text-sm">
+                {sessionsError}
+              </div>
+            )}
+            {sessionsToday.length === 0 && !sessionsError && metrics.activeWorkSessions > 0 ? (
+              <p className="text-slate-500 text-sm">
+                Active sessions exist but the list could not be loaded. Try refreshing the page.
+              </p>
+            ) : sessionsToday.length === 0 ? (
+              <p className="text-slate-500 text-sm">No work sessions today.</p>
+            ) : (
+              <div className="space-y-4">
+                {sessionsToday.map(({ technician, sessions }) => (
+                  <div key={technician.id} className="p-4 bg-slate-900/50 rounded-lg">
+                    <div className="font-medium text-white mb-2">
+                      {technician.name || technician.email}
+                    </div>
+                    <div className="text-slate-500 text-sm mb-2">{technician.email}</div>
+                    <div className="space-y-1 text-sm">
+                      {sessions.map((s) => (
+                        <div
+                          key={s.id}
+                          className="flex flex-wrap gap-x-4 gap-y-1 items-center text-slate-300"
+                        >
+                          <span>
+                            <strong className="text-slate-400">In:</strong>{" "}
+                            {new Date(s.punchIn).toLocaleTimeString()}
+                          </span>
+                          <span>
+                            <strong className="text-slate-400">Out:</strong>{" "}
+                            {s.punchOut
+                              ? new Date(s.punchOut).toLocaleTimeString()
+                              : s.isActive
+                                ? "— (active)"
+                                : "—"}
+                          </span>
+                          {s.duration && (
+                            <span className="text-slate-400">{s.duration}</span>
+                          )}
+                          {s.project && (
+                            <span className="text-slate-500">Project: {s.project}</span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Top Technicians */}

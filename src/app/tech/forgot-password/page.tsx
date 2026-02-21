@@ -76,7 +76,7 @@ export default function ForgotPasswordPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="block w-full py-3 rounded-lg bg-relectrik-orange text-black font-semibold text-center hover:opacity-90 disabled:opacity-60"
+                className="block w-full py-3 rounded-lg bg-relectrik-orange text-black font-semibold text-center hover:opacity-90 disabled:opacity-60 cursor-pointer touch-manipulation min-h-[48px]"
               >
                 {loading ? "Sending…" : "Send reset link"}
               </button>
@@ -85,12 +85,13 @@ export default function ForgotPasswordPage() {
 
           <Link
             href="/tech/login"
-            className="block w-full py-3 mt-4 rounded-lg border border-slate-600 text-slate-300 text-center hover:bg-slate-800"
+            className="block w-full py-3 mt-4 rounded-lg border border-slate-600 text-slate-300 text-center hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-relectrik-orange cursor-pointer touch-manipulation"
+            style={{ minHeight: 48 }}
           >
             Back to Sign in
           </Link>
           <p className="text-center mt-4">
-            <Link href="/" className="text-sm text-white/80 hover:text-white">
+            <Link href="/" className="text-sm text-white/80 hover:text-white inline-block py-2 cursor-pointer touch-manipulation">
               ← Back to home
             </Link>
           </p>
