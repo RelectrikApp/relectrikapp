@@ -39,7 +39,11 @@ export async function POST(request: Request) {
 
     if (!success) {
       console.error("Forgot password email error:", error);
-      return NextResponse.json({ error: "Failed to send email" }, { status: 500 });
+      // Return Resend error message so user can fix config (e.g. invalid API key, domain not verified)
+      return NextResponse.json(
+        { error: error && typeof error === "string" ? error : "Failed to send email" },
+        { status: 500 }
+      );
     }
 
     return NextResponse.json({ message: "If an account exists, you will receive a reset link." });

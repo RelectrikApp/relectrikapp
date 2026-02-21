@@ -21,6 +21,8 @@ Without `NEXTAUTH_SECRET` and `NEXTAUTH_URL` you will see **"Server error"** and
 
 Without `RESEND_API_KEY`, “Send reset link” will show **“Failed to send email”** because the app cannot send the reset email.
 
+**Resend on Vercel:** Paste `RESEND_API_KEY` without quotes. Leave `RESEND_FROM` unset to use `onboarding@resend.dev`. If you see a specific error (e.g. Invalid API key), check https://resend.com/api-keys and ensure the key has Sending permission.
+
 ## Optional
 
 | Variable | Description |

@@ -5,14 +5,14 @@
  * - If not set: links are only logged to the server console (dev-friendly).
  */
 
-// Vercel sets VERCEL_URL; use it so reset/verify links point to the deployed app
-const BASE_URL =
-  process.env.NEXTAUTH_URL ||
-  process.env.APP_URL ||
-  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined) ||
-  "http://localhost:3000";
-const RESEND_API_KEY = process.env.RESEND_API_KEY;
-const RESEND_FROM = process.env.RESEND_FROM || "Relectrikapp <onboarding@resend.dev>";
+function getBaseUrlValue(): string {
+  return (
+    process.env.NEXTAUTH_URL ||
+    process.env.APP_URL ||
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "") ||
+    "http://localhost:3000"
+  );
+}
 
 function extractLinkFromHtml(html: string): string | null {
   const match = html.match(/href="(https?:\/\/[^"]+)"/);
@@ -26,22 +26,32 @@ export async function sendEmail(options: {
   text?: string;
 }): Promise<{ success: boolean; error?: string }> {
   const link = extractLinkFromHtml(options.html);
+  // Read at request time so Vercel serverless has access to env vars
+  const apiKey = process.env.RESEND_API_KEY?.trim();
+  const from = (process.env.RESEND_FROM || "onboarding@resend.dev").trim();
 
-  if (RESEND_API_KEY) {
+  if (apiKey) {
     try {
       const { Resend } = await import("resend");
-      const resend = new Resend(RESEND_API_KEY);
-      const { error } = await resend.emails.send({
-        from: RESEND_FROM,
-        to: options.to,
+      const resend = new Resend(apiKey);
+      const { data, error } = await resend.emails.send({
+        from,
+        to: [options.to],
         subject: options.subject,
         html: options.html,
         text: options.text,
       });
-      if (error) return { success: false, error: error.message };
+      if (error) {
+        const msg = typeof error === "object" && error !== null && "message" in error
+          ? String((error as { message?: string }).message)
+          : JSON.stringify(error);
+        console.error("[Resend] send failed:", msg, error);
+        return { success: false, error: msg };
+      }
       return { success: true };
     } catch (e) {
       const err = e instanceof Error ? e.message : String(e);
+      console.error("[Resend] exception:", err, e);
       return { success: false, error: err };
     }
   }
@@ -75,5 +85,5 @@ export function passwordResetEmailHtml(link: string, name?: string): string {
 }
 
 export function getBaseUrl(): string {
-  return BASE_URL;
+  return getBaseUrlValue();
 }
