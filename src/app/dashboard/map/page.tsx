@@ -41,13 +41,17 @@ interface TechnicianLocation {
 
 const GOOGLE_MAPS_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
+const MAP_CALLBACK = "initRelectrikMap";
+
 export default function LiveMapPage() {
   const [locations, setLocations] = useState<TechnicianLocation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [mapLoadError, setMapLoadError] = useState<string | null>(null);
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<GoogleMap | null>(null);
   const markersRef = useRef<GoogleMarker[]>([]);
+  const scriptLoadedRef = useRef(false);
 
   useEffect(() => {
     fetchLocations();
@@ -71,58 +75,99 @@ export default function LiveMapPage() {
     }
   }
 
-  // Google Maps: un solo mapa con todos los técnicos visibles
+  // Load Google Maps script once only (no dependency on locations)
   useEffect(() => {
-    if (!GOOGLE_MAPS_KEY || !mapRef.current) return;
+    if (!GOOGLE_MAPS_KEY) return;
 
-    const withLocations = locations.filter((loc) => loc.location);
+    if (typeof google !== "undefined" && google.maps) {
+      scriptLoadedRef.current = true;
+      return;
+    }
 
-    function initMap() {
-      if (!mapRef.current || typeof google === "undefined") return;
-      // Centro por defecto (se ajusta con fitBounds si hay puntos)
-      const defaultCenter = withLocations[0]?.location ?? { lat: 19.4326, lng: -99.1332 };
-      const map = new google.maps.Map(mapRef.current, {
-        center: { lat: defaultCenter.lat, lng: defaultCenter.lng },
-        zoom: withLocations.length === 1 ? 14 : 10,
-        mapTypeControl: true,
-        fullscreenControl: true,
-      });
-      mapInstanceRef.current = map;
-      markersRef.current.forEach((m) => m.setMap(null));
-      markersRef.current = [];
-      withLocations.forEach((loc) => {
-        const pos = loc.location!;
-        const marker = new google.maps.Marker({
-          position: { lat: pos.lat, lng: pos.lng },
-          map,
-          title: loc.technicianName,
+    if (document.querySelector('script[src*="maps.googleapis.com"]')) {
+      scriptLoadedRef.current = true;
+      return;
+    }
+
+    const w = window as Window & { [MAP_CALLBACK]?: () => void };
+    w[MAP_CALLBACK] = () => {
+      scriptLoadedRef.current = true;
+      setMapLoadError(null);
+    };
+
+    const script = document.createElement("script");
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_KEY}&callback=${MAP_CALLBACK}`;
+    script.async = true;
+    script.defer = true;
+    script.onerror = () => {
+      setMapLoadError("Could not load Google Maps. Check your API key and network.");
+      w[MAP_CALLBACK] = undefined;
+    };
+    document.head.appendChild(script);
+
+    return () => {
+      w[MAP_CALLBACK] = undefined;
+    };
+  }, [GOOGLE_MAPS_KEY]);
+
+  // Init/update map when script is ready and mapRef is mounted
+  useEffect(() => {
+    if (!GOOGLE_MAPS_KEY || !mapRef.current || mapLoadError) return;
+
+    const withLocations = locations.filter((loc): loc is TechnicianLocation & { location: NonNullable<TechnicianLocation["location"]> } => Boolean(loc.location));
+
+    function renderMap() {
+      if (!mapRef.current || typeof google === "undefined" || !google.maps) return;
+      try {
+        const defaultCenter = withLocations[0]?.location ?? { lat: 19.4326, lng: -99.1332 };
+        const map = new google.maps.Map(mapRef.current, {
+          center: { lat: defaultCenter.lat, lng: defaultCenter.lng },
+          zoom: withLocations.length === 1 ? 14 : 10,
+          mapTypeControl: true,
+          fullscreenControl: true,
         });
-        markersRef.current.push(marker);
-      });
-      // Todos los técnicos en el mismo mapa: fitBounds con padding
-      if (withLocations.length > 0) {
-        const bounds = new google.maps.LatLngBounds();
-        withLocations.forEach((l) => bounds.extend({ lat: l.location!.lat, lng: l.location!.lng }));
-        map.fitBounds(bounds, 40);
-        if (withLocations.length === 1) {
-          map.setZoom(14);
+        mapInstanceRef.current = map;
+        markersRef.current.forEach((m) => m.setMap(null));
+        markersRef.current = [];
+        withLocations.forEach((loc) => {
+          const pos = loc.location;
+          const marker = new google.maps.Marker({
+            position: { lat: pos.lat, lng: pos.lng },
+            map,
+            title: loc.technicianName,
+          });
+          markersRef.current.push(marker);
+        });
+        if (withLocations.length > 0) {
+          const bounds = new google.maps.LatLngBounds();
+          withLocations.forEach((l) => bounds.extend({ lat: l.location.lat, lng: l.location.lng }));
+          map.fitBounds(bounds, 40);
+          if (withLocations.length === 1) {
+            map.setZoom(14);
+          }
         }
+        setMapLoadError(null);
+      } catch (e) {
+        setMapLoadError(
+          e instanceof Error ? e.message : "Google Maps error. Verify API key and enable Maps JavaScript API."
+        );
       }
     }
 
     if (typeof google !== "undefined" && google.maps) {
-      initMap();
+      renderMap();
       return;
     }
-    const script = document.createElement("script");
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_KEY}&callback=initRelectrikMap`;
-    script.async = true;
-    (window as Window & { initRelectrikMap?: () => void }).initRelectrikMap = initMap;
-    document.head.appendChild(script);
-    return () => {
-      (window as Window & { initRelectrikMap?: () => void }).initRelectrikMap = undefined;
-    };
-  }, [GOOGLE_MAPS_KEY, locations]);
+
+    const w = window as Window & { [MAP_CALLBACK]?: () => void };
+    const checkInterval = setInterval(() => {
+      if (typeof google !== "undefined" && google.maps) {
+        clearInterval(checkInterval);
+        renderMap();
+      }
+    }, 100);
+    return () => clearInterval(checkInterval);
+  }, [GOOGLE_MAPS_KEY, locations, mapLoadError]);
 
   if (loading) {
     return (
@@ -150,6 +195,17 @@ export default function LiveMapPage() {
       {error && (
         <div className="bg-red-900/50 border border-red-700 rounded-lg p-4 text-red-200">
           {error}
+        </div>
+      )}
+
+      {mapLoadError && hasGoogleMap && (
+        <div className="bg-amber-900/50 border border-amber-700 rounded-lg p-4 text-amber-200">
+          <p className="font-medium mb-2">Mapa no cargó correctamente</p>
+          <p className="text-sm mb-2">{mapLoadError}</p>
+          <p className="text-xs text-amber-300/80">
+            Verifica en Google Cloud Console: API key válida, Maps JavaScript API habilitada, facturación activa
+            y que el dominio ({typeof window !== "undefined" ? window.location.origin : ""}) esté permitido.
+          </p>
         </div>
       )}
 
