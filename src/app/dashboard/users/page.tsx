@@ -26,16 +26,63 @@ export default async function UsersPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-white">Users</h1>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+        <h1 className="text-xl sm:text-2xl font-bold text-white">Users</h1>
         <Link
           href="/dashboard/users/new"
-          className="px-4 py-2 rounded-lg bg-relectrik-orange text-black font-medium hover:opacity-90"
+          className="px-4 py-2 min-h-[44px] flex items-center justify-center rounded-lg bg-relectrik-orange text-black font-medium hover:opacity-90 w-fit"
         >
           New user
         </Link>
       </div>
-      <div className="rounded-xl border border-slate-700 overflow-hidden">
+
+      {/* Mobile: card layout */}
+      <div className="md:hidden space-y-4">
+        {users.map((u) => (
+          <div
+            key={u.id}
+            className="rounded-xl border border-slate-700 bg-slate-800/50 overflow-hidden"
+          >
+            <div className="p-4 space-y-2">
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <p className="font-medium text-white">{u.name ?? "—"}</p>
+                  <p className="text-sm text-slate-400">{u.email}</p>
+                </div>
+                <span
+                  className={`shrink-0 px-2 py-0.5 rounded text-xs font-medium ${
+                    u.status === "ACTIVE"
+                      ? "text-green-600 bg-green-900/40"
+                      : "text-red-400 bg-red-900/40"
+                  }`}
+                >
+                  {statusLabels[u.status] ?? u.status}
+                </span>
+              </div>
+              <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-300">
+                <span>
+                  <span className="text-slate-500">Role:</span>{" "}
+                  {roleLabels[u.role] ?? u.role}
+                </span>
+                {u.department && (
+                  <span>
+                    <span className="text-slate-500">Dept:</span> {u.department}
+                  </span>
+                )}
+              </div>
+              <Link
+                href={`/dashboard/users/${u.id}`}
+                className="inline-block mt-3 px-4 py-2 rounded-lg bg-relectrik-orange text-black font-medium text-sm hover:opacity-90"
+              >
+                Edit
+              </Link>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Desktop: table */}
+      <div className="hidden md:block rounded-xl border border-slate-700 overflow-hidden">
         <table className="w-full text-left">
           <thead className="bg-slate-800 text-slate-300 text-sm">
             <tr>
