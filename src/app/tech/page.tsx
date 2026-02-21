@@ -207,13 +207,15 @@ export default function TechHomePage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#0f172a] p-4">
-      <header className="flex items-center justify-between max-w-4xl mx-auto mb-8">
-        <h1 className="text-xl font-bold text-white">Relectrikapp — Technician</h1>
+    <main className="min-h-screen bg-[#0f172a] p-4 overflow-x-hidden">
+      <header className="flex items-center justify-between max-w-4xl mx-auto mb-6 md:mb-8 gap-4">
+        <h1 className="text-base sm:text-xl font-bold text-white truncate">
+          Relectrikapp
+        </h1>
         <TechSignOut />
       </header>
 
-      <div className="max-w-4xl mx-auto space-y-6">
+      <div className="max-w-4xl mx-auto space-y-4 md:space-y-6">
         {error && (
           <div className="bg-red-900/50 border border-red-700 rounded-lg p-4 text-red-200">
             {error}
@@ -221,20 +223,20 @@ export default function TechHomePage() {
         )}
 
         {/* Work Session Controls */}
-        <div className="bg-slate-800 rounded-lg p-6">
-          <h3 className="text-xl font-semibold text-white mb-4">Work Session</h3>
-          <div className="flex gap-4">
+        <div className="bg-slate-800 rounded-lg p-4 md:p-6">
+          <h3 className="text-lg md:text-xl font-semibold text-white mb-4">Work Session</h3>
+          <div className="flex flex-col sm:flex-row gap-3">
             <button
               onClick={handlePunchIn}
               disabled={punchLoading || workSession !== null}
-              className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-6 py-3 min-h-[48px] bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {punchLoading ? "Processing..." : "Punch In"}
             </button>
             <button
               onClick={handlePunchOut}
               disabled={punchLoading || workSession === null}
-              className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-6 py-3 min-h-[48px] bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {punchLoading ? "Processing..." : "Punch Out"}
             </button>
@@ -297,8 +299,8 @@ export default function TechHomePage() {
         </div>
 
         {/* Assigned Projects */}
-        <div className="bg-slate-800 rounded-lg p-6">
-          <h3 className="text-xl font-semibold text-white mb-4">Assigned Projects</h3>
+        <div className="bg-slate-800 rounded-lg p-4 md:p-6">
+          <h3 className="text-lg md:text-xl font-semibold text-white mb-4">Assigned Projects</h3>
           {projects.length === 0 ? (
             <div className="text-slate-400 text-sm">
               <p>No projects assigned</p>
@@ -327,7 +329,7 @@ export default function TechHomePage() {
                   </div>
                   <div className="mt-3">
                     <p className="text-xs text-slate-500 mb-2">Update Status:</p>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="flex flex-wrap gap-2">
                       <button
                         onClick={() => handleStatusUpdate(project.id, "IN_PROGRESS")}
                         disabled={statusLoading === project.id}
@@ -351,18 +353,18 @@ export default function TechHomePage() {
         </div>
 
         {/* Material Logging */}
-        <div className="bg-slate-800 rounded-lg p-6">
-          <h3 className="text-xl font-semibold text-white mb-4">Material Logging</h3>
-          <div className="flex gap-4">
+        <div className="bg-slate-800 rounded-lg p-4 md:p-6">
+          <h3 className="text-lg md:text-xl font-semibold text-white mb-4">Material Logging</h3>
+          <div className="flex flex-col sm:flex-row gap-3">
             <Link
               href="/tech/materials/purchase"
-              className="px-6 py-3 bg-relectrik-orange text-black rounded-lg hover:opacity-90 font-medium"
+              className="px-6 py-3 min-h-[48px] flex items-center justify-center bg-relectrik-orange text-black rounded-lg hover:opacity-90 font-medium"
             >
               Add Purchase
             </Link>
             <Link
               href="/tech/materials/usage"
-              className="px-6 py-3 border border-slate-600 text-slate-300 rounded-lg hover:bg-slate-700 font-medium"
+              className="px-6 py-3 min-h-[48px] flex items-center justify-center border border-slate-600 text-slate-300 rounded-lg hover:bg-slate-700 font-medium"
             >
               Record Usage
             </Link>

@@ -8,9 +8,9 @@ export default function HomePage() {
         <div className="flex justify-center mb-4">
           <RightElectrikLogo width={200} height={84} />
         </div>
-        <h1 className="text-3xl font-bold text-white">Relectrikapp</h1>
-        <p className="text-slate-300">Your AI Business Assistant</p>
-        <div className="flex flex-wrap gap-4 justify-center">
+        <h1 className="text-2xl sm:text-3xl font-bold text-white">Relectrikapp</h1>
+        <p className="text-slate-300 text-sm sm:text-base">Your AI Business Assistant</p>
+        <div className="flex flex-col sm:flex-row flex-wrap gap-3 justify-center">
           <Link
             href="/tech/login"
             className="px-6 py-3 rounded-lg bg-relectrik-orange text-black font-medium hover:opacity-90"

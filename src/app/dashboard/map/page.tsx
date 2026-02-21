@@ -183,7 +183,7 @@ export default function LiveMapPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-white mb-2">Live Map — Technicians</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-white mb-2">Live Map — Technicians</h1>
         <p className="text-slate-400">
           Real-time location of technicians with an active session (Punch In).
           {!hasGoogleMap && (
@@ -210,7 +210,7 @@ export default function LiveMapPage() {
       )}
 
       <div className="bg-slate-800 rounded-lg p-6">
-        <div className="h-[600px] bg-slate-900 rounded-lg relative overflow-hidden" ref={mapRef}>
+        <div className="h-[400px] sm:h-[500px] md:h-[600px] bg-slate-900 rounded-lg relative overflow-hidden" ref={mapRef}>
           {!hasGoogleMap && (
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="text-center text-slate-500">
@@ -236,8 +236,8 @@ export default function LiveMapPage() {
         </div>
       </div>
 
-      <div className="bg-slate-800 rounded-lg p-6">
-        <h2 className="text-xl font-semibold text-white mb-4">Active Technicians</h2>
+      <div className="bg-slate-800 rounded-lg p-4 md:p-6">
+        <h2 className="text-lg md:text-xl font-semibold text-white mb-4">Active Technicians</h2>
         {locations.length === 0 ? (
           <p className="text-slate-400">No active technicians at this time</p>
         ) : (
@@ -247,7 +247,7 @@ export default function LiveMapPage() {
                 key={loc.technicianId}
                 className="border border-slate-700 rounded-lg p-4 bg-slate-900/50"
               >
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                   <div>
                     <h3 className="text-white font-medium">{loc.technicianName}</h3>
                     <p className="text-sm text-slate-400">{loc.technicianEmail}</p>

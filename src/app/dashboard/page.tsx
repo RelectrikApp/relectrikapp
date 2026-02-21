@@ -95,7 +95,7 @@ export default function DashboardHomePage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-white mb-2">Dashboard</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-white mb-2">Dashboard</h1>
         <p className="text-slate-400">Business intelligence and metrics</p>
       </div>
 
@@ -111,20 +111,20 @@ export default function DashboardHomePage() {
         <>
           {/* Key Metrics */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="bg-slate-800 rounded-lg p-6 border border-slate-700">
+            <div className="bg-slate-800 rounded-lg p-4 md:p-6 border border-slate-700">
               <h3 className="text-sm text-slate-400 mb-2">Revenue This Month</h3>
               <p className="text-2xl font-bold text-white">
                 ${metrics.revenueThisMonth.toLocaleString()}
               </p>
             </div>
-            <div className="bg-slate-800 rounded-lg p-6 border border-slate-700">
+            <div className="bg-slate-800 rounded-lg p-4 md:p-6 border border-slate-700">
               <h3 className="text-sm text-slate-400 mb-2">Active Projects</h3>
               <p className="text-2xl font-bold text-white">{metrics.activeProjects}</p>
               <p className="text-xs text-slate-500 mt-1">
                 {metrics.totalProjects} total
               </p>
             </div>
-            <div className="bg-slate-800 rounded-lg p-6 border border-slate-700">
+            <div className="bg-slate-800 rounded-lg p-4 md:p-6 border border-slate-700">
               <h3 className="text-sm text-slate-400 mb-2">Active Technicians</h3>
               <p className="text-2xl font-bold text-white">
                 {metrics.activeWorkSessions}
@@ -133,7 +133,7 @@ export default function DashboardHomePage() {
                 {metrics.activeTechnicians} total
               </p>
             </div>
-            <div className="bg-slate-800 rounded-lg p-6 border border-slate-700">
+            <div className="bg-slate-800 rounded-lg p-4 md:p-6 border border-slate-700">
               <h3 className="text-sm text-slate-400 mb-2">Average Margin</h3>
               <p className="text-2xl font-bold text-white">{metrics.avgMargin}%</p>
             </div>
@@ -141,13 +141,13 @@ export default function DashboardHomePage() {
 
           {/* Secondary Metrics */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-slate-800 rounded-lg p-6 border border-slate-700">
+            <div className="bg-slate-800 rounded-lg p-4 md:p-6 border border-slate-700">
               <h3 className="text-sm text-slate-400 mb-2">Completed This Month</h3>
               <p className="text-3xl font-bold text-green-400">
                 {metrics.completedThisMonth}
               </p>
             </div>
-            <div className="bg-slate-800 rounded-lg p-6 border border-slate-700">
+            <div className="bg-slate-800 rounded-lg p-4 md:p-6 border border-slate-700">
               <h3 className="text-sm text-slate-400 mb-2">Overdue Invoices</h3>
               <p className="text-3xl font-bold text-red-400">
                 {metrics.overdueInvoices}
@@ -156,7 +156,7 @@ export default function DashboardHomePage() {
           </div>
 
           {/* Technician connection times - today */}
-          <div className="bg-slate-800 rounded-lg p-6 border border-slate-700">
+          <div className="bg-slate-800 rounded-lg p-4 md:p-6 border border-slate-700">
             <h3 className="text-lg font-semibold text-white mb-4">
               Technician connection times
             </h3>
@@ -217,7 +217,7 @@ export default function DashboardHomePage() {
 
           {/* Top Technicians */}
           {metrics.topTechnicians.length > 0 && (
-            <div className="bg-slate-800 rounded-lg p-6 border border-slate-700">
+            <div className="bg-slate-800 rounded-lg p-4 md:p-6 border border-slate-700">
               <h3 className="text-lg font-semibold text-white mb-4">
                 Top Performing Technicians
               </h3>
@@ -247,21 +247,21 @@ export default function DashboardHomePage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Link
               href="/dashboard/users"
-              className="p-6 rounded-xl bg-slate-800 border border-slate-700 text-white hover:border-relectrik-orange transition-colors"
+              className="p-4 md:p-6 min-h-[72px] rounded-xl bg-slate-800 border border-slate-700 text-white hover:border-relectrik-orange transition-colors flex flex-col justify-center"
             >
               <h2 className="font-semibold mb-1">Users</h2>
               <p className="text-sm text-slate-400">Manage technicians, admin and CEO.</p>
             </Link>
             <Link
               href="/dashboard/projects"
-              className="p-6 rounded-xl bg-slate-800 border border-slate-700 text-white hover:border-relectrik-orange transition-colors"
+              className="p-4 md:p-6 min-h-[72px] rounded-xl bg-slate-800 border border-slate-700 text-white hover:border-relectrik-orange transition-colors flex flex-col justify-center"
             >
               <h2 className="font-semibold mb-1">Projects</h2>
               <p className="text-sm text-slate-400">Create and track projects and clients.</p>
             </Link>
             <Link
               href="/dashboard/map"
-              className="p-6 rounded-xl bg-slate-800 border border-slate-700 text-white hover:border-relectrik-orange transition-colors"
+              className="p-4 md:p-6 min-h-[72px] rounded-xl bg-slate-800 border border-slate-700 text-white hover:border-relectrik-orange transition-colors flex flex-col justify-center"
             >
               <h2 className="font-semibold mb-1">Live Map</h2>
               <p className="text-sm text-slate-400">
@@ -270,7 +270,7 @@ export default function DashboardHomePage() {
             </Link>
             <Link
               href="/dashboard/ai"
-              className="p-6 rounded-xl bg-slate-800 border border-slate-700 text-white hover:border-relectrik-orange transition-colors"
+              className="p-4 md:p-6 min-h-[72px] rounded-xl bg-slate-800 border border-slate-700 text-white hover:border-relectrik-orange transition-colors flex flex-col justify-center"
             >
               <h2 className="font-semibold mb-1">AI Assistant</h2>
               <p className="text-sm text-slate-400">Get AI-powered insights and recommendations.</p>
