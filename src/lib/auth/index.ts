@@ -102,4 +102,5 @@ export const authOptions: NextAuthOptions = {
     signIn: "/tech/login",
   },
   session: { strategy: "jwt" },
+  trustHost: true, // Required for Vercel and other serverless hosts
 };

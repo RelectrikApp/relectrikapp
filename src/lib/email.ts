@@ -5,7 +5,12 @@
  * - If not set: links are only logged to the server console (dev-friendly).
  */
 
-const BASE_URL = process.env.NEXTAUTH_URL || process.env.APP_URL || "http://localhost:3000";
+// Vercel sets VERCEL_URL; use it so reset/verify links point to the deployed app
+const BASE_URL =
+  process.env.NEXTAUTH_URL ||
+  process.env.APP_URL ||
+  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined) ||
+  "http://localhost:3000";
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const RESEND_FROM = process.env.RESEND_FROM || "Relectrikapp <onboarding@resend.dev>";
 

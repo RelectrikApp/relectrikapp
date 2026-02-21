@@ -3,10 +3,17 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 export async function middleware(req: NextRequest) {
-  const token = await getToken({
-    req,
-    secret: process.env.NEXTAUTH_SECRET,
-  });
+  let token: { role?: string } | null = null;
+  try {
+    if (process.env.NEXTAUTH_SECRET) {
+      token = await getToken({
+        req,
+        secret: process.env.NEXTAUTH_SECRET,
+      });
+    }
+  } catch {
+    // If getToken fails (e.g. missing secret), treat as unauthenticated
+  }
   const path = req.nextUrl.pathname;
   
   // Auth pages (public access)
