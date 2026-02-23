@@ -29,6 +29,37 @@ export default function TechnicianConnectionTimesPage() {
   const [data, setData] = useState<ApiResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [selectedYear, selectedMonth] = month.split("-");
+  const selectedMonthNum = Number(selectedMonth);
+
+  const monthNames = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ] as const;
+
+  const yearOptions = (() => {
+    const nowY = new Date().getFullYear();
+    const start = nowY - 1;
+    const end = nowY + 3;
+    const ys: number[] = [];
+    for (let y = start; y <= end; y++) ys.push(y);
+    return ys;
+  })();
+
+  function updateMonth(nextYear: number, nextMonth: number) {
+    const mm = String(nextMonth).padStart(2, "0");
+    setMonth(`${nextYear}-${mm}`);
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -74,16 +105,33 @@ export default function TechnicianConnectionTimesPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <label htmlFor="month-select" className="text-slate-400 text-sm whitespace-nowrap">
-            Month
-          </label>
-          <input
-            id="month-select"
-            type="month"
-            value={month}
-            onChange={(e) => setMonth(e.target.value)}
-            className="rounded-lg bg-slate-800 border border-slate-600 text-white px-3 py-2 text-sm"
-          />
+          <label className="text-slate-400 text-sm whitespace-nowrap">Month</label>
+          <div className="flex items-center gap-2">
+            <select
+              aria-label="Select month"
+              value={String(selectedMonthNum)}
+              onChange={(e) => updateMonth(Number(selectedYear), Number(e.target.value))}
+              className="rounded-lg bg-slate-800 border border-slate-600 text-white px-3 py-2 text-sm"
+            >
+              {monthNames.map((name, idx) => (
+                <option key={name} value={String(idx + 1)}>
+                  {name}
+                </option>
+              ))}
+            </select>
+            <select
+              aria-label="Select year"
+              value={selectedYear}
+              onChange={(e) => updateMonth(Number(e.target.value), selectedMonthNum)}
+              className="rounded-lg bg-slate-800 border border-slate-600 text-white px-3 py-2 text-sm"
+            >
+              {yearOptions.map((y) => (
+                <option key={y} value={String(y)}>
+                  {y}
+                </option>
+              ))}
+            </select>
+          </div>
           <Link
             href="/dashboard"
             className="text-sm text-slate-400 hover:text-white"
@@ -118,10 +166,12 @@ export default function TechnicianConnectionTimesPage() {
             <table className="w-full text-left min-w-[800px]">
               <thead>
                 <tr className="bg-slate-900/80 text-slate-300 text-sm">
-                  <th className="px-3 py-2 font-medium sticky left-0 bg-slate-900/95 z-10">
+                  <th className="px-3 py-2 font-medium sticky left-0 bg-slate-900/95 z-10 w-[240px] min-w-[240px]">
                     Technician
                   </th>
-                  <th className="px-2 py-2 font-medium whitespace-nowrap">Total (h)</th>
+                  <th className="px-2 py-2 font-medium whitespace-nowrap sticky left-[240px] bg-slate-900/95 z-10">
+                    Total (h)
+                  </th>
                   {dayLabels.map(({ key, label }) => (
                     <th
                       key={key}
@@ -139,13 +189,13 @@ export default function TechnicianConnectionTimesPage() {
                     key={row.technician.id}
                     className="border-t border-slate-700 hover:bg-slate-800/80"
                   >
-                    <td className="px-3 py-2 sticky left-0 bg-slate-800 z-10">
+                    <td className="px-3 py-2 sticky left-0 bg-slate-800 z-10 w-[240px] min-w-[240px]">
                       <div className="font-medium text-white">
                         {row.technician.name || row.technician.email}
                       </div>
                       <div className="text-xs text-slate-500">{row.technician.email}</div>
                     </td>
-                    <td className="px-2 py-2 text-white font-semibold whitespace-nowrap">
+                    <td className="px-2 py-2 text-white font-semibold whitespace-nowrap sticky left-[240px] bg-slate-800 z-10 w-[96px] min-w-[96px]">
                       {row.totalHoursInMonth.toFixed(1)} h
                     </td>
                     {dayKeys.map((key) => {
