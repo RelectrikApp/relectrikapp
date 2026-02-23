@@ -222,11 +222,11 @@ export default function LiveMapPage() {
 
       {mapLoadError && hasGoogleMap && (
         <div className="bg-amber-900/50 border border-amber-700 rounded-lg p-4 text-amber-200">
-          <p className="font-medium mb-2">Mapa no cargó correctamente</p>
+          <p className="font-medium mb-2">Map could not load</p>
           <p className="text-sm mb-2">{mapLoadError}</p>
           <p className="text-xs text-amber-300/80">
-            Verifica en Google Cloud Console: API key válida, Maps JavaScript API habilitada, facturación activa
-            y que el dominio ({typeof window !== "undefined" ? window.location.origin : ""}) esté permitido.
+            Check Google Cloud Console: valid API key, Maps JavaScript API enabled, billing active,
+            and that the domain ({typeof window !== "undefined" ? window.location.origin : ""}) is allowed.
           </p>
         </div>
       )}

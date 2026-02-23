@@ -14,6 +14,7 @@ interface ApiResponse {
   technicians: TechnicianRow[];
 }
 
+/** Format YYYY-MM in English (e.g. "February 2026"). Title always uses selected month. */
 function formatMonthLabel(ym: string) {
   const [y, m] = ym.split("-").map(Number);
   const d = new Date(Date.UTC(y, m - 1, 1));
@@ -33,6 +34,7 @@ export default function TechnicianConnectionTimesPage() {
     let cancelled = false;
     setLoading(true);
     setError("");
+    setData(null);
     fetch(`/api/dashboard/technician-connection-times?month=${encodeURIComponent(month)}`)
       .then((res) => {
         if (!res.ok) throw new Error(res.status === 400 ? "Invalid month" : "Failed to load");
@@ -99,15 +101,17 @@ export default function TechnicianConnectionTimesPage() {
 
       {loading ? (
         <div className="text-white">Loading…</div>
-      ) : data && data.technicians.length === 0 ? (
+      ) : data && data.month !== month ? (
+        <div className="text-white">Loading…</div>
+      ) : data && data.month === month && data.technicians.length === 0 ? (
         <div className="bg-slate-800 rounded-lg p-6 border border-slate-700 text-slate-400">
           No technicians or no work sessions for {formatMonthLabel(month)}.
         </div>
-      ) : data ? (
+      ) : data && data.month === month ? (
         <div className="bg-slate-800 rounded-lg border border-slate-700 overflow-hidden">
           <div className="p-4 border-b border-slate-700">
             <h2 className="text-lg font-semibold text-white">
-              {formatMonthLabel(data.month)} — Total hours and daily breakdown
+              Total hours and daily breakdown
             </h2>
           </div>
           <div className="overflow-x-auto">
