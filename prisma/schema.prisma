@@ -51,6 +51,9 @@ model Project {
   assignedTechnician   User?              @relation("AssignedTechnician", fields: [assignedTechnicianId], references: [id])
   projectProfit        ProjectProfit?
   workSessions         WorkSession[]
+
+  @@index([status], map: "idx_project_status")
+  @@index([completedDate], map: "idx_project_completed_date")
 }
 
 model WorkSession {
@@ -68,6 +71,10 @@ model WorkSession {
   materialUsages    MaterialUsage[]
   project           Project            @relation(fields: [projectId], references: [id])
   technician        User               @relation(fields: [technicianId], references: [id])
+
+  @@index([isActive], map: "idx_work_session_is_active")
+  @@index([technicianId, isActive], map: "idx_work_session_technician_active")
+  @@index([startTime], map: "idx_work_session_start_time")
 }
 
 model Location {
@@ -130,6 +137,9 @@ model Invoice {
   paymentStatus PaymentStatus @default(PENDING)
   generatedBy   String?
   project       Project       @relation(fields: [projectId], references: [id])
+
+  @@index([invoiceDate], map: "idx_invoice_invoice_date")
+  @@index([paymentStatus], map: "idx_invoice_payment_status")
 }
 
 model ProjectProfit {

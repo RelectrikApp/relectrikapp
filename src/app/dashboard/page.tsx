@@ -52,38 +52,31 @@ export default function DashboardHomePage() {
     try {
       setSessionsError(null);
       setError("");
-      const metricsRes = await fetch("/api/dashboard/metrics");
+      const [metricsRes, sessionsRes] = await Promise.all([
+        fetch("/api/dashboard/metrics"),
+        fetch("/api/dashboard/work-sessions-today", { credentials: "include", cache: "no-store" }),
+      ]);
+
       if (!metricsRes.ok) {
         throw new Error("Failed to fetch metrics");
       }
       const data = await metricsRes.json();
       setMetrics(data);
 
-      try {
-        const sessionsRes = await fetch("/api/dashboard/work-sessions-today", {
-          credentials: "include",
-          cache: "no-store",
-        });
-        if (sessionsRes.ok) {
-          const sessionsData = await sessionsRes.json();
-          if (Array.isArray(sessionsData)) {
-            setSessionsToday(sessionsData);
-          } else {
-            setSessionsToday([]);
-            setSessionsError(sessionsData?.error || "Invalid sessions data");
-          }
+      if (sessionsRes.ok) {
+        const sessionsData = await sessionsRes.json();
+        if (Array.isArray(sessionsData)) {
+          setSessionsToday(sessionsData);
         } else {
-          const errBody = await sessionsRes.json().catch(() => ({}));
-          setSessionsError(
-            errBody?.error || `Error ${sessionsRes.status}: Could not load work sessions`
-          );
           setSessionsToday([]);
+          setSessionsError(sessionsData?.error || "Invalid sessions data");
         }
-      } catch (sessionsErr) {
-        setSessionsToday([]);
+      } else {
+        const errBody = await sessionsRes.json().catch(() => ({}));
         setSessionsError(
-          sessionsErr instanceof Error ? sessionsErr.message : "Failed to fetch work sessions"
+          errBody?.error || `Error ${sessionsRes.status}: Could not load work sessions`
         );
+        setSessionsToday([]);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load metrics");
@@ -157,9 +150,17 @@ export default function DashboardHomePage() {
 
           {/* Technician connection times - today */}
           <div className="bg-slate-800 rounded-lg p-4 md:p-6 border border-slate-700">
-            <h3 className="text-lg font-semibold text-white mb-4">
-              Technician connection times
-            </h3>
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+              <h3 className="text-lg font-semibold text-white">
+                Technician connection times
+              </h3>
+              <Link
+                href="/dashboard/technician-connection-times"
+                className="text-sm font-medium text-relectrik-orange hover:underline"
+              >
+                View calendar (monthly)
+              </Link>
+            </div>
             <p className="text-slate-400 text-sm mb-4">
               Punch in and punch out times. Shows today&apos;s sessions and any technician currently active (punched in).
             </p>

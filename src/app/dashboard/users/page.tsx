@@ -21,6 +21,11 @@ export default async function UsersPage() {
       role: true,
       status: true,
       department: true,
+      workSessions: {
+        where: { isActive: true },
+        take: 1,
+        select: { id: true },
+      },
     },
   });
 
@@ -64,6 +69,16 @@ export default async function UsersPage() {
                   <span className="text-slate-500">Role:</span>{" "}
                   {roleLabels[u.role] ?? u.role}
                 </span>
+                {u.role === "TECHNICIAN" && (
+                  <span>
+                    <span className="text-slate-500">Session:</span>{" "}
+                    {u.workSessions.length > 0 ? (
+                      <span className="text-green-400">In</span>
+                    ) : (
+                      <span className="text-slate-400">Out</span>
+                    )}
+                  </span>
+                )}
                 {u.department && (
                   <span>
                     <span className="text-slate-500">Dept:</span> {u.department}
@@ -90,6 +105,7 @@ export default async function UsersPage() {
               <th className="px-4 py-3">Email</th>
               <th className="px-4 py-3">Role</th>
               <th className="px-4 py-3">Status</th>
+              <th className="px-4 py-3">Session</th>
               <th className="px-4 py-3">Department</th>
               <th className="px-4 py-3 w-24"></th>
             </tr>
@@ -110,6 +126,17 @@ export default async function UsersPage() {
                   >
                     {statusLabels[u.status] ?? u.status}
                   </span>
+                </td>
+                <td className="px-4 py-3">
+                  {u.role === "TECHNICIAN" ? (
+                    u.workSessions.length > 0 ? (
+                      <span className="text-green-400 font-medium">In</span>
+                    ) : (
+                      <span className="text-slate-400">Out</span>
+                    )
+                  ) : (
+                    <span className="text-slate-500">—</span>
+                  )}
                 </td>
                 <td className="px-4 py-3">{u.department ?? "—"}</td>
                 <td className="px-4 py-3">

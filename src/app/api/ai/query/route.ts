@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireRole } from "@/lib/middleware/requireRole";
 import { auth } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/prisma";
+import { getDashboardMetrics } from "@/lib/services/dashboardMetrics";
 import { z } from "zod";
 
 const AIQuerySchema = z.object({
@@ -45,7 +46,7 @@ export async function POST(request: Request) {
       },
     });
 
-    // Simple rule-based responses using dashboard data (no external AI yet)
+    // Rule-based responses using shared dashboard metrics (no HTTP fetch)
     const q = query.toLowerCase().trim();
     let response: string;
 
@@ -58,16 +59,8 @@ export async function POST(request: Request) {
       q.includes("metrics") ||
       q.includes("overview")
     ) {
-      const metricsRes = await fetch(
-        `${process.env.NEXTAUTH_URL || "http://localhost:3000"}/api/dashboard/metrics`,
-        { headers: { cookie: request.headers.get("cookie") || "" } }
-      );
-      if (metricsRes.ok) {
-        const m = await metricsRes.json();
-        response = `**Dashboard summary:** Revenue this month: $${m.revenueThisMonth?.toLocaleString() ?? 0}. Active projects: ${m.activeProjects ?? 0} of ${m.totalProjects ?? 0} total. Completed this month: ${m.completedThisMonth ?? 0}. Overdue invoices: ${m.overdueInvoices ?? 0}. Active technicians in the field: ${m.activeWorkSessions ?? 0} of ${m.activeTechnicians ?? 0} total. Average margin: ${m.avgMargin ?? 0}%.`;
-      } else {
-        response = "I couldn't fetch metrics right now. Try again in a moment.";
-      }
+      const m = await getDashboardMetrics();
+      response = `**Dashboard summary:** Revenue this month: $${m.revenueThisMonth?.toLocaleString() ?? 0}. Active projects: ${m.activeProjects ?? 0} of ${m.totalProjects ?? 0} total. Completed this month: ${m.completedThisMonth ?? 0}. Overdue invoices: ${m.overdueInvoices ?? 0}. Active technicians in the field: ${m.activeWorkSessions ?? 0} of ${m.activeTechnicians ?? 0} total. Average margin: ${m.avgMargin ?? 0}%.`;
     } else if (q.includes("project") && (q.includes("status") || q.includes("how many"))) {
       const count = await prisma.project.count();
       const active = await prisma.project.count({

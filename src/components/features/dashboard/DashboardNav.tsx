@@ -6,6 +6,7 @@ import { DashboardSignOut } from "./DashboardSignOut";
 
 const navItems = [
   { href: "/dashboard", label: "Home" },
+  { href: "/dashboard/technician-connection-times", label: "Connection times" },
   { href: "/dashboard/map", label: "Live Map" },
   { href: "/dashboard/users", label: "Users" },
   { href: "/dashboard/projects", label: "Projects" },

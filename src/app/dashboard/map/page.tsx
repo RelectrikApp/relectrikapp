@@ -110,42 +110,53 @@ export default function LiveMapPage() {
     };
   }, [GOOGLE_MAPS_KEY]);
 
-  // Init/update map when script is ready and mapRef is mounted
+  // Mount map once; on location updates only refresh markers (no re-create = no flicker)
   useEffect(() => {
     if (!GOOGLE_MAPS_KEY || !mapRef.current || mapLoadError) return;
 
     const withLocations = locations.filter((loc): loc is TechnicianLocation & { location: NonNullable<TechnicianLocation["location"]> } => Boolean(loc.location));
 
-    function renderMap() {
+    function updateMarkersOnly(map: GoogleMap) {
+      markersRef.current.forEach((m) => m.setMap(null));
+      markersRef.current = [];
+      withLocations.forEach((loc) => {
+        const pos = loc.location;
+        const marker = new google.maps.Marker({
+          position: { lat: pos.lat, lng: pos.lng },
+          map,
+          title: loc.technicianName,
+        });
+        markersRef.current.push(marker);
+      });
+      if (withLocations.length > 0) {
+        const bounds = new google.maps.LatLngBounds();
+        withLocations.forEach((l) => bounds.extend({ lat: l.location.lat, lng: l.location.lng }));
+        map.fitBounds(bounds, 40);
+        if (withLocations.length === 1) {
+          map.setZoom(14);
+        }
+      }
+    }
+
+    function initOrUpdateMap() {
       if (!mapRef.current || typeof google === "undefined" || !google.maps) return;
       try {
+        const map = mapInstanceRef.current;
+        if (map) {
+          // Map already exists: only update markers (no re-render of map = no flicker)
+          updateMarkersOnly(map);
+          return;
+        }
+        // First run: create map once
         const defaultCenter = withLocations[0]?.location ?? { lat: 19.4326, lng: -99.1332 };
-        const map = new google.maps.Map(mapRef.current, {
+        const newMap = new google.maps.Map(mapRef.current, {
           center: { lat: defaultCenter.lat, lng: defaultCenter.lng },
           zoom: withLocations.length === 1 ? 14 : 10,
           mapTypeControl: true,
           fullscreenControl: true,
         });
-        mapInstanceRef.current = map;
-        markersRef.current.forEach((m) => m.setMap(null));
-        markersRef.current = [];
-        withLocations.forEach((loc) => {
-          const pos = loc.location;
-          const marker = new google.maps.Marker({
-            position: { lat: pos.lat, lng: pos.lng },
-            map,
-            title: loc.technicianName,
-          });
-          markersRef.current.push(marker);
-        });
-        if (withLocations.length > 0) {
-          const bounds = new google.maps.LatLngBounds();
-          withLocations.forEach((l) => bounds.extend({ lat: l.location.lat, lng: l.location.lng }));
-          map.fitBounds(bounds, 40);
-          if (withLocations.length === 1) {
-            map.setZoom(14);
-          }
-        }
+        mapInstanceRef.current = newMap;
+        updateMarkersOnly(newMap);
         setMapLoadError(null);
       } catch (e) {
         setMapLoadError(
@@ -154,19 +165,30 @@ export default function LiveMapPage() {
       }
     }
 
-    if (typeof google !== "undefined" && google.maps) {
-      renderMap();
-      return;
+    function cleanupMap() {
+      markersRef.current.forEach((m) => m.setMap(null));
+      markersRef.current = [];
+      mapInstanceRef.current = null;
+      if (mapRef.current) {
+        mapRef.current.innerHTML = "";
+      }
     }
 
-    const w = window as Window & { [MAP_CALLBACK]?: () => void };
+    if (typeof google !== "undefined" && google.maps) {
+      initOrUpdateMap();
+      return cleanupMap;
+    }
+
     const checkInterval = setInterval(() => {
       if (typeof google !== "undefined" && google.maps) {
         clearInterval(checkInterval);
-        renderMap();
+        initOrUpdateMap();
       }
     }, 100);
-    return () => clearInterval(checkInterval);
+    return () => {
+      clearInterval(checkInterval);
+      cleanupMap();
+    };
   }, [GOOGLE_MAPS_KEY, locations, mapLoadError]);
 
   if (loading) {
@@ -210,9 +232,11 @@ export default function LiveMapPage() {
       )}
 
       <div className="bg-slate-800 rounded-lg p-6">
-        <div className="h-[400px] sm:h-[500px] md:h-[600px] bg-slate-900 rounded-lg relative overflow-hidden" ref={mapRef}>
+        <div className="h-[400px] sm:h-[500px] md:h-[600px] bg-slate-900 rounded-lg relative overflow-hidden">
+          {/* Map container: always empty so Google Maps owns it; no React children = no removeChild conflict on unmount */}
+          <div ref={mapRef} className="absolute inset-0 w-full h-full" />
           {!hasGoogleMap && (
-            <div className="absolute inset-0 flex items-center justify-center">
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
               <div className="text-center text-slate-500">
                 <div className="text-4xl mb-4">🗺️</div>
                 <p className="text-lg mb-2">Map</p>
@@ -227,9 +251,8 @@ export default function LiveMapPage() {
               </div>
             </div>
           )}
-
           {hasGoogleMap && withLocations.length === 0 && (
-            <div className="absolute inset-0 flex items-center justify-center">
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
               <p className="text-slate-500">No technicians with location at this time</p>
             </div>
           )}
